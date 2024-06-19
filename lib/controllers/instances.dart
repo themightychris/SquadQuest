@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:intl/intl.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -32,6 +34,7 @@ class InstancesController extends AsyncNotifier<List<Instance>> {
 
     // subscribe to changes
     supabase.from('instances').stream(primaryKey: ['id']).listen((data) async {
+      log('received instance stream update with ${data.length} records against ${state.value?.length} records');
       // populate created_by field with profile data
       var populatedData = await profilesCache
           .populateData(data, [(idKey: 'created_by', modelKey: 'created_by')]);
@@ -42,6 +45,7 @@ class InstancesController extends AsyncNotifier<List<Instance>> {
 
       // convert to model instances and update state
       state = AsyncValue.data(populatedData.map(Instance.fromMap).toList());
+      log('applied instance stream update to ${state.value?.length} records');
     });
 
     return future;
@@ -76,15 +80,19 @@ class InstancesController extends AsyncNotifier<List<Instance>> {
     final insertedInstance = Instance.fromMap(insertedData);
 
     // update loaded instances with newly created one
+    log('Updating loaded instances with new instance ${insertedInstance.id} against ${state.value?.length} records');
     if (state.hasValue && state.value != null) {
       state = AsyncValue.data(updateListWithRecord<Instance>(state.value!,
           (existing) => existing.id == insertedInstance.id, insertedInstance));
+      log('Updaated loaded instances with new instance ${insertedInstance.id} for ${state.value?.length} records');
     }
 
     // create rsvp
+    log('creating rsvp');
     await ref
         .read(rsvpsProvider.notifier)
         .save(insertedInstance.id!, InstanceMemberStatus.yes);
+    log('created rsvp');
 
     return insertedInstance;
   }

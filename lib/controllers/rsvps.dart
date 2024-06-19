@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:developer';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:squadquest/common.dart';
@@ -28,10 +29,12 @@ class RsvpsController extends AsyncNotifier<List<InstanceMember>> {
         .stream(primaryKey: ['id'])
         .eq('member', supabase.auth.currentUser!.id)
         .listen((data) async {
+          log('received rsvp stream update with ${data.length} records against ${state.value?.length} records');
           final populatedData = await profilesCache
               .populateData(data, [(idKey: 'member', modelKey: 'member')]);
           state = AsyncValue.data(
               populatedData.map(InstanceMember.fromMap).toList());
+          log('applied rsvp stream update with ${data.length} records against ${state.value?.length} records');
         });
 
     return future;
@@ -51,12 +54,14 @@ class RsvpsController extends AsyncNotifier<List<InstanceMember>> {
 
       // update loaded rsvps with created/updated one
       if (state.hasValue && state.value != null) {
+        log('updating rsvps list with new/updated instance member ${instanceMember!.id} against ${state.value?.length} records');
         state = AsyncValue.data(updateListWithRecord<InstanceMember>(
             state.value!,
             (existing) =>
                 existing.instanceId == instanceId &&
                 existing.memberId == supabase.auth.currentUser!.id,
             instanceMember));
+        log('updated rsvps list with new/updated instance member ${instanceMember!.id} against ${state.value?.length} records');
       }
 
       return instanceMember;
@@ -109,11 +114,16 @@ class InstanceRsvpsController
   }
 
   void _onData(List<Map<String, dynamic>> data) async {
+    if (data.length > 1) {
+      debugger();
+    }
+    log('InstanceRsvpsController.onData: received rsvp stream update with ${data.length} records against ${state.value?.length} records');
     final profilesCache = ref.read(profilesCacheProvider.notifier);
 
     final populatedData = await profilesCache
         .populateData(data, [(idKey: 'member', modelKey: 'member')]);
     state = AsyncValue.data(populatedData.map(InstanceMember.fromMap).toList());
+    log('InstanceRsvpsController.onData: applied rsvp stream update with ${data.length} records against ${state.value?.length} records');
   }
 
   Future<InstanceMember?> save(InstanceMemberStatus? status) async {
@@ -123,12 +133,14 @@ class InstanceRsvpsController
 
     // update loaded rsvps with created/updated one
     if (state.hasValue && state.value != null) {
+      log('InstanceRsvpsController.save: updating rsvps list with new/updated instance member ${savedRsvp!.id} against ${state.value?.length} records');
       state = AsyncValue.data(updateListWithRecord<InstanceMember>(
           state.value!,
           (existing) =>
               existing.instanceId == instanceId &&
               existing.memberId == supabase.auth.currentUser!.id,
           savedRsvp));
+      log('InstanceRsvpsController.save: updated rsvps list with new/updated instance member ${savedRsvp!.id} against ${state.value?.length} records');
     }
 
     return savedRsvp;
