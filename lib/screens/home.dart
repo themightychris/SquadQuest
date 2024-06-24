@@ -8,6 +8,7 @@ import 'package:squadquest/controllers/instances.dart';
 import 'package:squadquest/controllers/rsvps.dart';
 import 'package:squadquest/models/instance.dart';
 import 'package:squadquest/components/tiles/instance.dart';
+import 'package:squadquest/services/location.dart';
 
 enum _InstanceGroup {
   current,
@@ -32,7 +33,9 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       title: 'Welcome to SquadQuest',
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          context.push('/post-event');
+          // context.push('/post-event');
+          ref.read(locationSharingProvider.notifier).state =
+              !ref.read(locationSharingProvider)!;
         },
         child: const Icon(Icons.add),
       ),

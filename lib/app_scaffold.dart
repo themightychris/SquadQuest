@@ -53,8 +53,9 @@ class AppScaffold extends StatelessWidget {
                   child: child!),
               ...[
                 if (showLocationSharingSheet)
+                  // TODO: animate? with https://api.flutter.dev/flutter/widgets/PositionedTransition-class.html or https://api.flutter.dev/flutter/widgets/SlideTransition-class.html
                   Positioned(
-                      bottom: 0,
+                      bottom: -50,
                       left: 0,
                       right: 0,
                       child:
